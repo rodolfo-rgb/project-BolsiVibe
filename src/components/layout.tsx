@@ -17,7 +17,7 @@ const Layout: React.FC = () => {
             case "Principal":
                 return <Dashboard />;
             case "Transacciones":
-                return < Transactions />;
+                return <Transactions />;
             case "Presupuesto":
                 return <Budget />;
             case "Educacion Financiera":
@@ -28,17 +28,23 @@ const Layout: React.FC = () => {
     };
 
     return (
-        <div className="container bg-gray-50/50">
-            {/* Pasamos setSelectedPage al Sidebar */}
+        <div className="container bg-gray-50/50 min-h-screen flex">
+            {/* Sidebar ocupa su propio espacio */}
             <Sidebar onSelectPage={setSelectedPage} />
-            <div className="p-4 xl:ml-80">
+            {/* Contenedor principal con flex column */}
+            <div className="flex flex-col p-4 xl:ml-80 w-full">
+                {/* Header */}
                 <nav className="block w-full max-w-full bg-transparent text-white shadow-none rounded-xl transition-all px-0 py-1">
                     <Header />
                 </nav>
-                <div className="mt-12">
+
+                {/* Contenido principal */}
+                <div className="mt-12 flex-1">
                     {renderContent()}
                 </div>
-                <div className="text-blue-gray-600 mt-4">
+
+                {/* Footer empujado hacia abajo */}
+                <div className="text-blue-gray-600 mt-auto pt-4">
                     <Footer />
                 </div>
             </div>
@@ -47,6 +53,7 @@ const Layout: React.FC = () => {
 };
 
 export default Layout;
+
 
 
 {/* <Sidebar onSelect={(page: string) => console.log(`Selected page: ${page}`)} /> */ }

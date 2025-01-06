@@ -1,10 +1,13 @@
-import React from "react";
-
+import MonthlyView from "../components/MonthlyView";
+import { Toaster } from "../components/ui/toaster";
+import { Toaster as Sonner } from "../components/ui/sonner";
 const Budget = () => {
     return (
-        <div>
-            <h1>Presupuesto</h1>
-        </div>
+        <>
+            <Toaster />
+            <Sonner />
+            <MonthlyView />
+        </>
     );
 };
 

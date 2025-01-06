@@ -37,7 +37,7 @@ const Dashboard: React.FC = () => {
                         <MdAccountBalanceWallet className="w-6 h-6" />
                         Mis Cuentas
                     </h2>
-                    <button className="flex items-center gap-2 bg-[rgb(13,40,71)] text-white px-4 py-2 rounded-md hover:bg-[rgb(29,71,118)">
+                    <button className="flex items-center gap-2 bg-[rgb(13,40,71)] text-white px-4 py-2 rounded-md hover:bg-[rgb(29,71,118)]">
                         <svg xmlns="http://www.w 3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
@@ -91,7 +91,7 @@ const Dashboard: React.FC = () => {
                         <FaCreditCard className="w-6 h-6" />
                         Mis Tarjetas de Crédito
                     </h2>
-                    <button className="flex items-center gap-2  bg-[rgb(13,40,71)] text-white px-4 py-2 rounded-md hover:bg-[rgb(29,71,118)">
+                    <button className="flex items-center gap-2  bg-[rgb(13,40,71)] text-white px-4 py-2 rounded-md hover:bg-[rgb(29,71,118)]">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
