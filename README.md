@@ -54,10 +54,6 @@ Las contribuciones son bienvenidas. Si deseas contribuir a BolsiVibe, por favor 
     ```
 5. Abre un Pull Request en GitHub.
 
-## Licencia
-
-Este proyecto está licenciado bajo la Licencia MIT. Consulta el archivo `LICENSE` para obtener más información.
-
 ## Contacto
 
 Si tienes alguna pregunta o sugerencia, no dudes en ponerte en contacto con nosotros a través de [correo electrónico](mailto:contacto@bolsivibe.com).

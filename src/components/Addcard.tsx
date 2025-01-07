@@ -12,7 +12,7 @@ import { PlusCircle } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "../components/ui/use-toast";
 
-interface AddExpenseDialogProps {
+interface AddcardProps {
     onAddExpense: (expense: {
         description: string;
         amount: number;
@@ -20,7 +20,7 @@ interface AddExpenseDialogProps {
     }) => void;
 }
 
-const AddExpenseDialog = ({ onAddExpense }: AddExpenseDialogProps) => {
+const Addcard = ({ onAddExpense }: AddcardProps) => {
     const [open, setOpen] = useState(false);
     const [description, setDescription] = useState("");
     const [amount, setAmount] = useState("");
@@ -106,4 +106,4 @@ const AddExpenseDialog = ({ onAddExpense }: AddExpenseDialogProps) => {
     );
 };
 
-export default AddExpenseDialog;
+export default Addcard;
