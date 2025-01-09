@@ -61,7 +61,7 @@ const CreditCardsPanel = () => {
             {creditCards.map((card) => (
               <div
                 key={card.id}
-                className="flex items-center justify-between p-4 bg-secondary rounded-lg"
+                className="flex items-center justify-between p-4 bg-white rounded-lg"
               >
                 <span className="font-medium">{card.name}</span>
                 <span className="text-lg text-destructive">
