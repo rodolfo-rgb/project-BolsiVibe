@@ -1,16 +1,23 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../components/ui/sheet";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "../components/ui/form";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
+import { useToast } from "../hooks/use-toast";
 
 interface NewAccountFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: { name: string; balance: number }) => void;
+  initialValues?: {
+    name: string;
+    balance: number;
+  };
 }
 
-const NewAccountForm = ({ isOpen, onClose, onSubmit }: NewAccountFormProps) => {
+const NewAccountForm = ({ isOpen, onClose, onSubmit, initialValues }: NewAccountFormProps) => {
+  const { toast } = useToast();
   const form = useForm({
     defaultValues: {
       name: "",
@@ -18,7 +25,22 @@ const NewAccountForm = ({ isOpen, onClose, onSubmit }: NewAccountFormProps) => {
     },
   });
 
+  useEffect(() => {
+    if (initialValues) {
+      form.reset(initialValues);
+    }
+  }, [initialValues, form]);
+
   const handleSubmit = (data: { name: string; balance: number }) => {
+    if (!data.name) {
+      toast({
+        title: "Error",
+        description: "Por favor ingresa un nombre para la cuenta.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     onSubmit(data);
     form.reset();
     onClose();
@@ -28,7 +50,7 @@ const NewAccountForm = ({ isOpen, onClose, onSubmit }: NewAccountFormProps) => {
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Nueva Cuenta</SheetTitle>
+          <SheetTitle>{initialValues ? "Editar Cuenta" : "Nueva Cuenta"}</SheetTitle>
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 mt-4">
@@ -49,7 +71,7 @@ const NewAccountForm = ({ isOpen, onClose, onSubmit }: NewAccountFormProps) => {
               name="balance"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Saldo Inicial</FormLabel>
+                  <FormLabel>Saldo</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -62,7 +84,7 @@ const NewAccountForm = ({ isOpen, onClose, onSubmit }: NewAccountFormProps) => {
               )}
             />
             <Button type="submit" className="w-full">
-              Crear Cuenta
+              {initialValues ? "Guardar Cambios" : "Crear Cuenta"}
             </Button>
           </form>
         </Form>
