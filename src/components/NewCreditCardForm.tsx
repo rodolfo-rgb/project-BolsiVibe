@@ -1,9 +1,11 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../components/ui/sheet";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "../components/ui/form";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "./ui/form";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { useToast } from "../hooks/use-toast";
 
 interface NewCreditCardFormProps {
   isOpen: boolean;
@@ -15,9 +17,17 @@ interface NewCreditCardFormProps {
     expiryDate: string;
     cutoffDate: string;
   }) => void;
+  initialValues?: {
+    institution?: string;
+    name: string;
+    type?: string;
+    expiryDate?: string;
+    cutoffDate?: string;
+  };
 }
 
-const NewCreditCardForm = ({ isOpen, onClose, onSubmit }: NewCreditCardFormProps) => {
+const NewCreditCardForm = ({ isOpen, onClose, onSubmit, initialValues }: NewCreditCardFormProps) => {
+  const { toast } = useToast();
   const form = useForm({
     defaultValues: {
       institution: "",
@@ -28,6 +38,12 @@ const NewCreditCardForm = ({ isOpen, onClose, onSubmit }: NewCreditCardFormProps
     },
   });
 
+  useEffect(() => {
+    if (initialValues) {
+      form.reset(initialValues);
+    }
+  }, [initialValues, form]);
+
   const handleSubmit = (data: {
     institution: string;
     name: string;
@@ -35,7 +51,15 @@ const NewCreditCardForm = ({ isOpen, onClose, onSubmit }: NewCreditCardFormProps
     expiryDate: string;
     cutoffDate: string;
   }) => {
-    // Format the expiryDate from YYYY-MM to MM/YY before submitting
+    if (!data.institution || !data.name || !data.type || !data.expiryDate || !data.cutoffDate) {
+      toast({
+        title: "Error",
+        description: "Por favor completa todos los campos requeridos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const formattedData = {
       ...data,
       expiryDate: data.expiryDate ? formatExpiryDate(data.expiryDate) : "",
@@ -54,7 +78,7 @@ const NewCreditCardForm = ({ isOpen, onClose, onSubmit }: NewCreditCardFormProps
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Nueva Tarjeta de Crédito</SheetTitle>
+          <SheetTitle>{initialValues ? "Editar Tarjeta" : "Nueva Tarjeta de Crédito"}</SheetTitle>
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 mt-4">
@@ -110,8 +134,8 @@ const NewCreditCardForm = ({ isOpen, onClose, onSubmit }: NewCreditCardFormProps
                 <FormItem>
                   <FormLabel>Fecha de Vencimiento</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="month" 
+                    <Input
+                      type="month"
                       {...field}
                       placeholder="MM/YY"
                     />
@@ -132,7 +156,7 @@ const NewCreditCardForm = ({ isOpen, onClose, onSubmit }: NewCreditCardFormProps
               )}
             />
             <Button type="submit" className="w-full">
-              Agregar Tarjeta
+              {initialValues ? "Guardar Cambios" : "Agregar Tarjeta"}
             </Button>
           </form>
         </Form>
