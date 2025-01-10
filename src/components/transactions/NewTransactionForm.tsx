@@ -9,6 +9,35 @@ import CommonFields from "./forms/CommonFields";
 import ExpenseFields from "./forms/ExpenseFields";
 import IncomeFields from "./forms/IncomeFields";
 import CreditPaymentFields from "./forms/CreditPaymentFields";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useToast } from "../ui/use-toast";
+
+const transactionSchema = z.object({
+    type: z.enum(["income", "expense", "credit_payment"] as const),
+    amount: z.number().min(1, "El monto debe ser mayor a 0"),
+    description: z.string().min(1, "La descripción es requerida"),
+    date: z.string().min(1, "La fecha es requerida"),
+    category: z.string().min(1, "La categoría es requerida"),
+    sourceAccountId: z.number().optional(),
+    destinationAccountId: z.number().optional(),
+    creditCardId: z.number().optional(),
+}).refine((data) => {
+    if (data.type === "expense") {
+        return !!data.sourceAccountId;
+    }
+    if (data.type === "income") {
+        return !!data.destinationAccountId;
+    }
+    if (data.type === "credit_payment") {
+        return !!data.creditCardId;
+    }
+    return true;
+}, {
+    message: "Por favor selecciona una cuenta o tarjeta según el tipo de transacción",
+});
+
+type TransactionFormData = z.infer<typeof transactionSchema>;
 
 interface NewTransactionFormProps {
     isOpen: boolean;
@@ -28,8 +57,10 @@ interface NewTransactionFormProps {
 const NewTransactionForm = ({ isOpen, onClose, onSubmit }: NewTransactionFormProps) => {
     const { accounts } = useAccounts();
     const { creditCards, updateCardDebt } = useCreditCards();
+    const { toast } = useToast();
 
-    const form = useForm({
+    const form = useForm<TransactionFormData>({
+        resolver: zodResolver(transactionSchema),
         defaultValues: {
             type: "expense" as TransactionType,
             amount: 0,
@@ -42,12 +73,20 @@ const NewTransactionForm = ({ isOpen, onClose, onSubmit }: NewTransactionFormPro
         },
     });
 
-    const handleSubmit = (data: any) => {
-        if (data.type === "credit_payment" && data.creditCardId) {
-            updateCardDebt(data.creditCardId, data.amount);
+    const handleSubmit = (data: TransactionFormData) => {
+        try {
+            if (data.type === "credit_payment" && data.creditCardId) {
+                updateCardDebt(data.creditCardId, data.amount);
+            }
+            onSubmit(data);
+            form.reset();
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Hubo un error al procesar la transacción",
+            });
         }
-        onSubmit(data);
-        form.reset();
     };
 
     const transactionType = form.watch("type");
