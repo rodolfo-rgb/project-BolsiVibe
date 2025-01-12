@@ -13,12 +13,12 @@ import QuinceReport from "./components/reports/QuincenalReport";
 import AuthPage from "./components/auth/AuthPage";
 import { SidebarProvider } from "./components/ui/sidebar";
 import { Toaster } from "./components/ui/toaster";
+import { AuthProvider, useAuth } from "./lib/auth";
 
-function App() {
-  // Temporalmente establecemos isAuthenticated como true
-  const isAuthenticated = true;
+function AppContent() {
+  const { session } = useAuth();
 
-  if (!isAuthenticated) {
+  if (!session) {
     return (
       <div className="min-h-screen bg-background w-full">
         <AuthPage />
@@ -50,6 +50,14 @@ function App() {
         <Toaster />
       </div>
     </SidebarProvider>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

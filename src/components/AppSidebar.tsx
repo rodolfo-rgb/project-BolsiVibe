@@ -4,6 +4,8 @@ import { IoMdCash } from "react-icons/io"
 import { MdCastForEducation } from "react-icons/md"
 import { FaSignOutAlt } from "react-icons/fa"
 import { Link, useLocation } from "react-router-dom"
+import { useAuth } from "../lib/auth"
+import { useToast } from "./ui/use-toast"
 
 const navigationItems = [
     {
@@ -30,6 +32,24 @@ const navigationItems = [
 
 export default function AppSidebar() {
     const location = useLocation()
+    const { signOut } = useAuth()
+    const { toast } = useToast()
+
+    const handleSignOut = async () => {
+        try {
+            await signOut()
+            toast({
+                title: "Sesión cerrada",
+                description: "Has cerrado sesión exitosamente.",
+            })
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "No se pudo cerrar la sesión.",
+                variant: "destructive",
+            })
+        }
+    }
 
     const isActive = (path: string) => {
         if (path === "/" && location.pathname === "/") return true
@@ -74,6 +94,7 @@ export default function AppSidebar() {
                     <ul className="mb-4 flex flex-col gap-1">
                         <li>
                             <button
+                                onClick={handleSignOut}
                                 className="flex items-center gap-4 px-4 py-3 rounded-lg w-full text-white hover:bg-white/10 active:bg-white/30 transition-all duration-200"
                             >
                                 <FaSignOutAlt className="w-5 h-5 text-inherit" />

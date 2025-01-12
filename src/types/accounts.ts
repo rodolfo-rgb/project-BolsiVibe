@@ -1,5 +1,8 @@
 export interface Account {
-    id: number;
+    id: string;
+    user_id: string | null;
     name: string;
-    balance: number;
+    balance: number | null;
+    created_at: string;
+    updated_at: string;
 }

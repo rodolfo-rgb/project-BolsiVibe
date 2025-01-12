@@ -9,6 +9,8 @@ function createWindow() {
     const win = new BrowserWindow({
         width: 1315,
         height: 600,
+        minWidth: 1315,  // Establece el ancho mínimo
+        minHeight: 600,  // Establece la altura mínima
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
@@ -16,9 +18,8 @@ function createWindow() {
         },
         // Mantener el marco para conservar los botones de cerrar, minimizar y maximizar
         frame: true,
-        icon: path.join(__dirname, 'public/ABOUT ME.png'),
+        icon: path.join(__dirname, 'public/BolsiVibe.png'),
     });
-
 
     win.loadURL('http://localhost:5173'); // Cambia esto si tu puerto es diferente
 

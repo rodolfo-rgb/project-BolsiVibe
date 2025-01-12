@@ -2,7 +2,7 @@ import { DollarSign } from "lucide-react";
 
 const AuthAnimation = () => {
     return (
-        <div className="flex flex-col items-center justify-center min-h-[200px] animate-fade-in">
+        <div className="flex flex-col items-center justify-center min-h-screen animate-fade-in">
             <div className="relative">
                 <DollarSign className="w-20 h-20 text-primary animate-bounce" />
                 <div className="absolute -inset-1 bg-primary/20 rounded-full blur animate-pulse" />

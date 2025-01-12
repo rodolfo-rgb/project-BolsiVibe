@@ -6,16 +6,7 @@ import {
     DialogDescription,
 } from "../ui/dialog";
 import CreditCardItem from "./CreditCardItem";
-
-interface CreditCard {
-    id: number;
-    name: string;
-    debt: number;
-    institution?: string;
-    type?: string;
-    expiryDate?: string;
-    cutoffDate?: string;
-}
+import { CreditCard } from "../../types/creditCard";
 
 interface CardsDialogProps {
     isOpen: boolean;

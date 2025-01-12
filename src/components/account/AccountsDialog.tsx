@@ -6,12 +6,7 @@ import {
     DialogDescription,
 } from "../ui/dialog";
 import AccountItem from "./AccountItem";
-
-interface Account {
-    id: number;
-    name: string;
-    balance: number;
-}
+import { Account } from "../../types/accounts";
 
 interface AccountsDialogProps {
     isOpen: boolean;

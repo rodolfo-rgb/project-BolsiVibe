@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import AuthAnimation from "./AuthAnimation";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
-import { Button } from "..//ui/button";
+import { Button } from "../ui/button";
 
 const AuthPage = () => {
     const [showAnimation, setShowAnimation] = useState(true);

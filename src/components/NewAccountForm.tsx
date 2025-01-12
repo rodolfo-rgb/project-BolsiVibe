@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../components/ui/sheet";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "../components/ui/form";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "./ui/form";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
 import { useToast } from "../hooks/use-toast";
 
 interface NewAccountFormProps {

@@ -1,19 +1,22 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { Plus, ArrowUpCircle, ArrowDownCircle, CreditCard } from "lucide-react";
+import { Plus, ArrowUpCircle, ArrowDownCircle, CreditCard, Trash2 } from "lucide-react";
 import { useTransactions } from "../hooks/useTransactions";
+import { useAccounts } from "../hooks/useAccounts";
 import NewTransactionForm from "./transactions/NewTransactionForm";
 import { useToast } from "./ui/use-toast";
 import { Transaction } from "../types/transaction";
+import { TransactionFormData } from "../types/transaction-types";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toogle-group";
 
 const TransactionsPanel = () => {
-    const { transactions, addTransaction } = useTransactions();
+    const { transactions, addTransaction, deleteTransaction } = useTransactions();
+    const { accounts } = useAccounts();
     const { toast } = useToast();
     const [isNewTransactionFormOpen, setIsNewTransactionFormOpen] = useState(false);
     const [filter, setFilter] = useState<"all" | "account" | "credit">("all");
 
-    const handleAddTransaction = (data: Omit<Transaction, "id">) => {
+    const handleAddTransaction = (data: TransactionFormData) => {
         addTransaction(data);
         setIsNewTransactionFormOpen(false);
         toast({
@@ -30,6 +33,8 @@ const TransactionsPanel = () => {
                 return <ArrowDownCircle className="h-4 w-4 text-red-500" />;
             case "credit_payment":
                 return <CreditCard className="h-4 w-4 text-blue-500" />;
+            default:
+                return null;
         }
     };
 
@@ -41,6 +46,8 @@ const TransactionsPanel = () => {
                 return "Gasto";
             case "credit_payment":
                 return "Pago de Tarjeta";
+            default:
+                return "";
         }
     };
 
@@ -49,6 +56,12 @@ const TransactionsPanel = () => {
         if (filter === "credit") return transaction.type === "credit_payment";
         return transaction.type === "income" || transaction.type === "expense";
     });
+
+    const handleDeleteTransaction = async (transaction: Transaction) => {
+        if (window.confirm("¿Estás seguro de que deseas eliminar esta transacción?")) {
+            await deleteTransaction(transaction);
+        }
+    };
 
     return (
         <div className="max-w-4xl mx-auto px-4">
@@ -99,22 +112,31 @@ const TransactionsPanel = () => {
                             <div>
                                 <p className="font-medium">{transaction.description}</p>
                                 <p className="text-sm text-muted-foreground">
-                                    {getTransactionTypeText(transaction.type)} • {transaction.category} •{" "}
-                                    {new Date(transaction.date).toLocaleDateString()}
+                                    {getTransactionTypeText(transaction.type)} • {transaction.date}
                                 </p>
                             </div>
                         </div>
-                        <span
-                            className={`font-medium ${transaction.type === "income"
-                                ? "text-green-500"
-                                : transaction.type === "expense"
-                                    ? "text-red-500"
-                                    : "text-blue-500"
-                                }`}
-                        >
-                            {transaction.type === "income" ? "+" : "-"}$
-                            {transaction.amount.toLocaleString("es-ES")}
-                        </span>
+                        <div className="flex items-center gap-4">
+                            <span
+                                className={`font-medium ${transaction.type === "income"
+                                    ? "text-green-500"
+                                    : transaction.type === "expense"
+                                        ? "text-red-500"
+                                        : "text-blue-500"
+                                    }`}
+                            >
+                                {transaction.type === "income" ? "+" : "-"}$
+                                {transaction.amount.toLocaleString("es-ES")}
+                            </span>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteTransaction(transaction)}
+                                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-100"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
                     </div>
                 ))}
             </div>
@@ -123,6 +145,7 @@ const TransactionsPanel = () => {
                 isOpen={isNewTransactionFormOpen}
                 onClose={() => setIsNewTransactionFormOpen(false)}
                 onSubmit={handleAddTransaction}
+                accounts={accounts}
             />
         </div>
     );

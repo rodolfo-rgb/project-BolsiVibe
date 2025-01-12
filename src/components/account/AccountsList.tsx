@@ -19,7 +19,7 @@ const AccountsList = ({ accounts, onAccountClick }: AccountsListProps) => {
                 >
                     <span className="font-medium">{account.name}</span>
                     <span className="text-lg">
-                        ${account.balance.toLocaleString("es-ES")}
+                        ${(account.balance ?? 0).toLocaleString("es-ES")}
                     </span>
                 </div>
             ))}
@@ -30,7 +30,7 @@ const AccountsList = ({ accounts, onAccountClick }: AccountsListProps) => {
                 <span className="font-semibold">Total</span>
                 <span className="text-xl font-bold">
                     ${accounts
-                        .reduce((sum, account) => sum + account.balance, 0)
+                        .reduce((sum, account) => sum + (account.balance ?? 0), 0)
                         .toLocaleString("es-ES")}
                 </span>
             </div>

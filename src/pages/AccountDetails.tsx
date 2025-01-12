@@ -1,20 +1,22 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, DollarSign, BarChart2, RefreshCw } from "lucide-react";
+import { ArrowLeft, DollarSign } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { useAccounts } from "../hooks/useAccounts";
 import { useState } from "react";
 import { Input } from "../components/ui/input";
 import { useToast } from "../components/ui/use-toast";
+import { useTransactions } from "../hooks/useTransactions";
 
 const AccountDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { accounts, editAccount } = useAccounts();
+    const { transactions } = useTransactions();
     const { toast } = useToast();
-    const account = accounts.find((acc) => acc.id === Number(id));
+    const account = accounts.find((acc) => acc.id === id);
     const [isAdjusting, setIsAdjusting] = useState(false);
-    const [newBalance, setNewBalance] = useState(account?.balance.toString() || "0");
+    const [newBalance, setNewBalance] = useState((account?.balance ?? 0).toString());
 
     if (!account) {
         return (
@@ -28,9 +30,16 @@ const AccountDetails = () => {
         );
     }
 
-    const handleBalanceAdjust = () => {
+    // Verificar si es la cuenta Cartera y si tiene transacciones
+    const isCartera = account.name === "Cartera";
+    const accountTransactions = transactions.filter(
+        (t) => t.account_id === account.id || t.destination_account_id === account.id
+    );
+    const hasTransactions = accountTransactions.length > 0;
+
+    const handleBalanceAdjust = async () => {
         if (isAdjusting) {
-            editAccount(account.id, {
+            await editAccount(account.id, {
                 name: account.name,
                 balance: Number(newBalance),
             });
@@ -40,14 +49,6 @@ const AccountDetails = () => {
             });
         }
         setIsAdjusting(!isAdjusting);
-    };
-
-    // Datos de ejemplo - en una implementación real vendrían de la base de datos
-    const accountStats = {
-        expenses: 2500,
-        income: 5000,
-        transactions: 15,
-        type: "Cuenta Corriente",
     };
 
     return (
@@ -66,7 +67,6 @@ const AccountDetails = () => {
                                 variant={isAdjusting ? "default" : "outline"}
                                 onClick={handleBalanceAdjust}
                             >
-                                <RefreshCw className="mr-2 h-4 w-4" />
                                 {isAdjusting ? "Guardar" : "Reajustar"}
                             </Button>
                         </CardTitle>
@@ -83,60 +83,81 @@ const AccountDetails = () => {
                                 />
                             ) : (
                                 <span className="text-2xl font-bold">
-                                    ${account.balance.toLocaleString("es-ES")}
+                                    ${(account.balance ?? 0).toLocaleString("es-ES")}
                                 </span>
                             )}
                         </div>
                     </CardContent>
                 </Card>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Información de la Cuenta</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <dl className="space-y-2">
-                                <div className="flex justify-between">
-                                    <dt className="text-muted-foreground">Tipo de Cuenta</dt>
-                                    <dd className="font-medium">{accountStats.type}</dd>
-                                </div>
-                                <div className="flex justify-between">
-                                    <dt className="text-muted-foreground">Transacciones</dt>
-                                    <dd className="font-medium">{accountStats.transactions}</dd>
-                                </div>
-                            </dl>
-                        </CardContent>
-                    </Card>
+                {(!isCartera || hasTransactions) && (
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Información de la Cuenta</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <dl className="space-y-2">
+                                    <div className="flex justify-between">
+                                        <dt className="text-muted-foreground">Tipo de Cuenta</dt>
+                                        <dd className="font-medium">
+                                            {isCartera ? "Cartera" : "Cuenta Regular"}
+                                        </dd>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <dt className="text-muted-foreground">Transacciones</dt>
+                                        <dd className="font-medium">{accountTransactions.length}</dd>
+                                    </div>
+                                </dl>
+                            </CardContent>
+                        </Card>
 
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Movimientos</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    {accountTransactions.map((transaction) => (
+                                        <div
+                                            key={transaction.id}
+                                            className="flex items-center justify-between border-b pb-2"
+                                        >
+                                            <span className="text-sm text-muted-foreground">
+                                                {transaction.description}
+                                            </span>
+                                            <span
+                                                className={`font-medium ${transaction.type === "income"
+                                                    ? "text-green-600"
+                                                    : "text-red-600"
+                                                    }`}
+                                            >
+                                                {transaction.type === "income" ? "+" : "-"}$
+                                                {transaction.amount.toLocaleString("es-ES")}
+                                            </span>
+                                        </div>
+                                    ))}
+                                    {accountTransactions.length === 0 && (
+                                        <p className="text-center text-muted-foreground">
+                                            No hay transacciones registradas
+                                        </p>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+
+                {isCartera && !hasTransactions && (
                     <Card>
-                        <CardHeader>
-                            <CardTitle>Movimientos</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
-                                        <BarChart2 className="h-4 w-4 text-green-500" />
-                                        <span className="text-muted-foreground">Ingresos</span>
-                                    </div>
-                                    <span className="font-medium text-green-600">
-                                        ${accountStats.income.toLocaleString("es-ES")}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
-                                        <BarChart2 className="h-4 w-4 text-red-500" />
-                                        <span className="text-muted-foreground">Gastos</span>
-                                    </div>
-                                    <span className="font-medium text-red-600">
-                                        ${accountStats.expenses.toLocaleString("es-ES")}
-                                    </span>
-                                </div>
-                            </div>
+                        <CardContent className="p-6">
+                            <p className="text-center text-muted-foreground">
+                                Esta cuenta aún no ha sido utilizada. Las transacciones y detalles
+                                se mostrarán una vez que realices operaciones en ella.
+                            </p>
                         </CardContent>
                     </Card>
-                </div>
+                )}
             </div>
         </div>
     );

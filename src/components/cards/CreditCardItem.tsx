@@ -6,16 +6,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-
-interface CreditCard {
-    id: number;
-    name: string;
-    debt: number;
-    institution?: string;
-    type?: string;
-    expiryDate?: string;
-    cutoffDate?: string;
-}
+import { CreditCard } from "../../types/creditCard";
 
 interface CreditCardItemProps {
     card: CreditCard;
@@ -34,13 +25,10 @@ const CreditCardItem = ({
         <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
             <div className="space-y-1">
                 <p className="font-medium">{card.name}</p>
-                {card.institution && (
-                    <p className="text-sm text-muted-foreground">{card.institution}</p>
-                )}
             </div>
             <div className="flex items-center gap-4">
                 <span className="text-lg text-destructive">
-                    {showAmounts ? `$${card.debt.toLocaleString("es-ES")}` : "••••••"}
+                    {showAmounts ? `$${((card.current_balance ?? 0)).toLocaleString("es-ES")}` : "••••••"}
                 </span>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

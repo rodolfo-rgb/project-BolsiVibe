@@ -6,9 +6,10 @@ import { TransactionType } from "../../../types/transaction";
 
 interface CommonFieldsProps {
     form: UseFormReturn<any>;
+    onTypeChange: (type: TransactionType) => void;
 }
 
-const CommonFields = ({ form }: CommonFieldsProps) => {
+const CommonFields = ({ form, onTypeChange }: CommonFieldsProps) => {
     return (
         <>
             <FormField
@@ -17,7 +18,13 @@ const CommonFields = ({ form }: CommonFieldsProps) => {
                 render={({ field }) => (
                     <FormItem>
                         <FormLabel>Tipo</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                            onValueChange={(value: TransactionType) => {
+                                field.onChange(value);
+                                onTypeChange(value);
+                            }}
+                            defaultValue={field.value}
+                        >
                             <FormControl>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Selecciona el tipo" />
@@ -29,6 +36,7 @@ const CommonFields = ({ form }: CommonFieldsProps) => {
                                 <SelectItem value="credit_payment">Pago de Tarjeta</SelectItem>
                             </SelectContent>
                         </Select>
+                        <FormMessage />
                     </FormItem>
                 )}
             />
@@ -69,20 +77,6 @@ const CommonFields = ({ form }: CommonFieldsProps) => {
                         <FormLabel>Fecha</FormLabel>
                         <FormControl>
                             <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
-
-            <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Categoría</FormLabel>
-                        <FormControl>
-                            <Input {...field} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>

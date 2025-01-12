@@ -1,4 +1,4 @@
-import { FormField, FormItem, FormLabel, FormControl } from "../../ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "../../ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
 import { Account } from "../../../types/accounts";
 import { UseFormReturn } from "react-hook-form";
@@ -12,11 +12,11 @@ const IncomeFields = ({ form, accounts }: IncomeFieldsProps) => {
     return (
         <FormField
             control={form.control}
-            name="destinationAccountId"
+            name="destination_account_id"
             render={({ field }) => (
                 <FormItem>
                     <FormLabel>Cuenta Destino</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Selecciona la cuenta destino" />
@@ -24,12 +24,13 @@ const IncomeFields = ({ form, accounts }: IncomeFieldsProps) => {
                         </FormControl>
                         <SelectContent>
                             {accounts.map((account) => (
-                                <SelectItem key={account.id} value={account.id.toString()}>
+                                <SelectItem key={account.id} value={account.id}>
                                     {account.name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
+                    <FormMessage />
                 </FormItem>
             )}
         />

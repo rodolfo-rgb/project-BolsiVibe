@@ -6,12 +6,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-
-interface Account {
-    id: number;
-    name: string;
-    balance: number;
-}
+import { Account } from "../../types/accounts";
 
 interface AccountItemProps {
     account: Account;
@@ -21,12 +16,14 @@ interface AccountItemProps {
 }
 
 const AccountItem = ({ account, onEdit, onDelete }: AccountItemProps) => {
+    const isCartera = account.name === "Cartera";
+
     return (
         <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
             <div>
                 <span className="font-medium">{account.name}</span>
                 <p className="text-sm text-muted-foreground">
-                    ${account.balance.toLocaleString("es-ES")}
+                    ${(account.balance ?? 0).toLocaleString("es-ES")}
                 </p>
             </div>
             <DropdownMenu>
@@ -40,13 +37,15 @@ const AccountItem = ({ account, onEdit, onDelete }: AccountItemProps) => {
                         <Pencil className="mr-2 h-4 w-4" />
                         Editar
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                        className="text-red-600"
-                        onClick={() => onDelete(account)}
-                    >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Eliminar
-                    </DropdownMenuItem>
+                    {!isCartera && (
+                        <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => onDelete(account)}
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                        </DropdownMenuItem>
+                    )}
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>

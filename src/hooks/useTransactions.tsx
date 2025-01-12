@@ -1,53 +1,142 @@
-import { useState } from "react";
-import { Transaction, TransactionType } from "../types/transaction";
+import { useState, useEffect } from "react";
+import { supabase } from "../integrations/supabase/client";
+import { useToast } from "../components/ui/use-toast";
+import { Transaction } from "../types/transaction";
+import { useAuth } from "../lib/auth";
+import { TransactionFormData } from "../types/transaction-types";
+import { formatTransactionData, handleError } from "../utils/transaction-utils";
 
 export const useTransactions = () => {
-    const [transactions, setTransactions] = useState<Transaction[]>([
-        {
-            id: 1,
-            type: "income",
-            amount: 5000,
-            description: "Salario",
-            date: "2024-04-15",
-            accountId: 1,
-            category: "Trabajo",
-        },
-        {
-            id: 2,
-            type: "expense",
-            amount: 1500,
-            description: "Supermercado",
-            date: "2024-04-14",
-            accountId: 1,
-            category: "Alimentación",
-        },
-        {
-            id: 3,
-            type: "credit_payment",
-            amount: 2000,
-            description: "Pago tarjeta Visa",
-            date: "2024-04-13",
-            creditCardId: 1,
-            accountId: 1,
-            category: "Pagos",
-        },
-    ]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { toast } = useToast();
+    const { user } = useAuth();
 
-    const addTransaction = (data: Omit<Transaction, "id">) => {
-        const newTransaction = {
-            ...data,
-            id: transactions.length + 1,
-        };
-        setTransactions((prev) => [...prev, newTransaction]);
-        return newTransaction;
+    const fetchTransactions = async () => {
+        if (!user) return;
+
+        try {
+            const { data, error } = await supabase
+                .from("transactions")
+                .select("*")
+                .eq('user_id', user.id)
+                .order("date", { ascending: false });
+
+            if (error) throw error;
+            setTransactions(data || []);
+        } catch (error) {
+            handleError(error as Error, toast, "No se pudieron cargar las transacciones");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const deleteTransaction = (id: number) => {
-        setTransactions((prev) => prev.filter((t) => t.id !== id));
+    const updateAccountBalance = async (accountId: string, amount: number) => {
+        const { error } = await supabase.rpc(
+            'update_account_balance',
+            {
+                p_account_id: accountId,
+                p_amount: amount
+            }
+        );
+
+        if (error) {
+            console.error("Error al actualizar el saldo de la cuenta:", error);
+            throw error;
+        }
     };
+
+    const addTransaction = async (data: TransactionFormData) => {
+        if (!user) {
+            toast({
+                title: "Error",
+                description: "Debes iniciar sesión para realizar esta acción",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        try {
+            const transactionData = formatTransactionData(data, user.id);
+            console.log("Datos de transacción formateados:", transactionData);
+
+            const { data: newTransaction, error: transactionError } = await supabase
+                .from("transactions")
+                .insert([transactionData])
+                .select()
+                .single();
+
+            if (transactionError) {
+                console.error("Error al insertar transacción:", transactionError);
+                throw transactionError;
+            }
+
+            if (data.type === "income" && data.destination_account_id) {
+                await updateAccountBalance(data.destination_account_id, data.amount);
+            } else if (data.type === "expense" && data.account_id) {
+                await updateAccountBalance(data.account_id, -data.amount);
+            }
+
+            setTransactions((prev) => [newTransaction as Transaction, ...prev]);
+
+            toast({
+                title: "Transacción exitosa",
+                description: "La transacción se ha registrado y los saldos se han actualizado.",
+            });
+
+            return newTransaction;
+        } catch (error) {
+            handleError(error as Error, toast, "No se pudo crear la transacción");
+        }
+    };
+
+    const deleteTransaction = async (transaction: Transaction) => {
+        if (!user) {
+            toast({
+                title: "Error",
+                children: "Debes iniciar sesión para realizar esta acción",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        try {
+            // Delete the transaction
+            const { error: deleteError } = await supabase
+                .from("transactions")
+                .delete()
+                .eq("id", transaction.id)
+                .eq("user_id", user.id);
+
+            if (deleteError) throw deleteError;
+
+            // Update account balance based on transaction type
+            if (transaction.type === "income" && transaction.destination_account_id) {
+                await updateAccountBalance(transaction.destination_account_id, -transaction.amount);
+            } else if (transaction.type === "expense" && transaction.account_id) {
+                await updateAccountBalance(transaction.account_id, transaction.amount);
+            }
+
+            setTransactions((prev) => prev.filter((t) => t.id !== transaction.id));
+
+            toast({
+                title: "Transacción eliminada",
+                children: "La transacción se ha eliminado y los saldos se han actualizado.",
+            });
+        } catch (error) {
+            handleError(error as Error, toast, "No se pudo eliminar la transacción");
+        }
+    };
+
+    useEffect(() => {
+        if (user) {
+            fetchTransactions();
+        }
+    }, [user]);
 
     return {
         transactions,
+        loading,
         addTransaction,
         deleteTransaction,
     };

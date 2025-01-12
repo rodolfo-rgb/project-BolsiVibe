@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Card, CardContent } from "../components/ui/card";
+import { Card, CardContent } from "./ui/card";
 import { Eye, EyeOff } from "lucide-react";
-import { Button } from "../components/ui/button";
+import { Button } from "./ui/button";
 
 interface BalancePanelProps {
   totalBalance: number;
@@ -25,18 +25,20 @@ const BalancePanel = ({ totalBalance, income, expenses }: BalancePanelProps) => 
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">Balance Total</h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleVisibility}
-            className="h-8 w-8"
-          >
-            {showAmounts ? (
-              <Eye className="h-5 w-5" />
-            ) : (
-              <EyeOff className="h-5 w-5" />
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleVisibility}
+              className="h-8 w-8"
+            >
+              {showAmounts ? (
+                <Eye className="h-5 w-5" />
+              ) : (
+                <EyeOff className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
         </div>
         <div className="text-3xl font-bold mb-4">
           {formatAmount(totalBalance)}

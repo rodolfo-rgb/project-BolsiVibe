@@ -1,18 +1,57 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
+import { useAuth } from "../lib/auth";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Button } from "./ui/button";
+import { useToast } from "./ui/use-toast";
 
 const Header: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const { user, signOut } = useAuth();
+    const { toast } = useToast();
+
+    const handleSignOut = async () => {
+        try {
+            await signOut();
+            toast({
+                title: "Sesión cerrada",
+                description: "Has cerrado sesión exitosamente",
+            });
+            navigate('/');
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "No se pudo cerrar la sesión",
+                variant: "destructive",
+            });
+        }
+    };
 
     // Obtener la ruta actual y formatearla
     const getPathSegments = () => {
         const path = location.pathname === "/" ? "principal" : location.pathname.slice(1);
-        return path.split("/").map(segment => ({
-            name: segment.replace(/-/g, " "),
-            path: segment
-        }));
+        return path.split("/").map(segment => {
+            // Si el segmento parece ser un UUID, reemplazarlo con "detalles"
+            if (segment.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)) {
+                return {
+                    name: "detalles",
+                    path: segment
+                };
+            }
+            return {
+                name: segment.replace(/-/g, " "),
+                path: segment
+            };
+        });
     };
 
     const pathSegments = getPathSegments();
@@ -62,17 +101,39 @@ const Header: React.FC = () => {
                         </label>
                     </div>
                 </div>
-                <button className="relative middle none font-sans font-medium text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none w-10 max-w-[40px] h-10 max-h-[40px] rounded-lg text-xs text-gray-500 hover:bg-blue-gray-500/10 active:bg-blue-gray-500/30 grid xl:hidden" type="button">
-                    <span className="absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2">
-                        <User className="h-6 w-6 text-blue-gray-500" />
-                    </span>
-                </button>
-                <a href="#">
-                    <button className="middle none font-sans font-bold center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none text-xs py-3 rounded-lg text-gray-500 hover:bg-blue-gray-500/10 active:bg-blue-gray-500/30 hidden items-center gap-1 px-4 xl:flex" type="button">
-                        <User className="h-5 w-5 text-blue-gray-500" />
-                        Perfil
-                    </button>
-                </a>
+                <div className="hidden xl:block">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="relative gap-2 h-10">
+                                <User className="h-5 w-5 text-blue-gray-500" />
+                                <span className="text-gray-500">{user?.email?.split('@')[0] || 'Usuario'}</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuLabel>{user?.email || 'Usuario'}</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={handleSignOut}>
+                                Cerrar Sesión
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+                <div className="xl:hidden">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-10 w-10">
+                                <User className="h-5 w-5 text-blue-gray-500" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuLabel>{user?.email || 'Usuario'}</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={handleSignOut}>
+                                Cerrar Sesión
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
                 <button
                     onClick={() => navigate('/settings')}
                     className="relative middle none font-sans font-medium text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none w-10 max-w-[40px] h-10 max-h-[40px] rounded-lg text-xs text-gray-500 hover:bg-blue-gray-500/10 active:bg-blue-gray-500/30"

@@ -1,18 +1,12 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Plus } from "lucide-react";
+import { Card, CardContent } from "../components/ui/card";
 import { useAccounts } from "../hooks/useAccounts";
+import { useToast } from "../components/ui/use-toast";
+import { Account } from "../types/accounts";
 import NewAccountForm from "./NewAccountForm";
 import AccountsDialog from "./account/AccountsDialog";
 import AccountsList from "./account/AccountsList";
-import { useToast } from "./ui/use-toast";
-
-interface Account {
-  id: number;
-  name: string;
-  balance: number;
-}
+import AccountsPanelHeader from "./account/AccountsPanelHeader";
 
 const AccountsPanel = () => {
   const { accounts, addAccount, editAccount, deleteAccount } = useAccounts();
@@ -22,18 +16,20 @@ const AccountsPanel = () => {
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
 
-  const handleAddAccount = (data: { name: string; balance: number }) => {
-    const newAccount = addAccount(data);
+  const handleAddAccount = async (data: { name: string; balance: number }) => {
+    const newAccount = await addAccount(data);
     setIsNewAccountFormOpen(false);
-    toast({
-      title: "Cuenta creada",
-      description: `La cuenta ${newAccount.name} ha sido creada exitosamente.`,
-    });
+    if (newAccount) {
+      toast({
+        title: "Cuenta creada",
+        description: `La cuenta ${newAccount.name} ha sido creada exitosamente.`,
+      });
+    }
   };
 
-  const handleEditAccount = (data: { name: string; balance: number }) => {
+  const handleEditAccount = async (data: { name: string; balance: number }) => {
     if (selectedAccount) {
-      editAccount(selectedAccount.id, data);
+      await editAccount(selectedAccount.id, data);
       setIsEditFormOpen(false);
       setSelectedAccount(null);
       toast({
@@ -43,8 +39,18 @@ const AccountsPanel = () => {
     }
   };
 
-  const handleDeleteAccount = (account: Account) => {
-    deleteAccount(account.id);
+  const handleDeleteAccount = async (account: Account) => {
+    // Prevent deletion of the default "Cartera" account
+    if (account.name === "Cartera") {
+      toast({
+        title: "Acción no permitida",
+        description: "La cuenta Cartera no puede ser eliminada.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await deleteAccount(account.id);
     setIsAccountsDialogOpen(false);
     setSelectedAccount(null);
     toast({
@@ -63,16 +69,13 @@ const AccountsPanel = () => {
   return (
     <>
       <Card className="w-full max-w-2xl mx-auto">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Mis Cuentas</CardTitle>
-          <Button className="gap-2" onClick={() => setIsNewAccountFormOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Nueva Cuenta
-          </Button>
-        </CardHeader>
+        <AccountsPanelHeader onNewAccount={() => setIsNewAccountFormOpen(true)} />
         <CardContent>
           <AccountsList
-            accounts={accounts}
+            accounts={accounts.map(account => ({
+              ...account,
+              balance: account.balance ?? 0 // Si balance es null, usamos 0
+            }))}
             onAccountClick={() => setIsAccountsDialogOpen(true)}
           />
         </CardContent>
@@ -86,7 +89,10 @@ const AccountsPanel = () => {
 
       <AccountsDialog
         isOpen={isAccountsDialogOpen}
-        accounts={accounts}
+        accounts={accounts.map(account => ({
+          ...account,
+          balance: account.balance ?? 0 // Si balance es null, usamos 0
+        }))}
         onClose={handleCloseDialogs}
         onEdit={(account) => {
           setSelectedAccount(account);
@@ -103,7 +109,10 @@ const AccountsPanel = () => {
           setSelectedAccount(null);
         }}
         onSubmit={handleEditAccount}
-        initialValues={selectedAccount || undefined}
+        initialValues={selectedAccount ? {
+          ...selectedAccount,
+          balance: selectedAccount.balance ?? 0 // Si balance es null, usamos 0
+        } : undefined}
       />
     </>
   );

@@ -1,6 +1,5 @@
 import {
     AlertDialog,
-    AlertDialogAction,
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
@@ -8,22 +7,15 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "../ui/alert-dialog";
-
-interface CreditCard {
-    id: number;
-    name: string;
-    debt: number;
-    institution?: string;
-    type?: string;
-    expiryDate?: string;
-    cutoffDate?: string;
-}
+import { Button } from "../ui/button";
+import { useState } from "react";
+import { CreditCard } from "../../types/creditCard";
 
 interface DeleteCardDialogProps {
     isOpen: boolean;
     card: CreditCard | null;
     onClose: () => void;
-    onConfirm: () => void;
+    onConfirm: () => Promise<void>;
 }
 
 const DeleteCardDialog = ({
@@ -32,6 +24,20 @@ const DeleteCardDialog = ({
     onClose,
     onConfirm,
 }: DeleteCardDialogProps) => {
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleConfirm = async () => {
+        try {
+            setIsDeleting(true);
+            await onConfirm();
+            onClose();
+        } catch (error) {
+            console.error("Error deleting card:", error);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     return (
         <AlertDialog open={isOpen} onOpenChange={onClose}>
             <AlertDialogContent>
@@ -43,15 +49,16 @@ const DeleteCardDialog = ({
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel onClick={onClose}>
+                    <AlertDialogCancel onClick={onClose} disabled={isDeleting}>
                         Cancelar
                     </AlertDialogCancel>
-                    <AlertDialogAction
-                        onClick={onConfirm}
-                        className="bg-destructive hover:bg-destructive/90"
+                    <Button
+                        variant="destructive"
+                        onClick={handleConfirm}
+                        disabled={isDeleting}
                     >
-                        Eliminar
-                    </AlertDialogAction>
+                        {isDeleting ? "Eliminando..." : "Eliminar"}
+                    </Button>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

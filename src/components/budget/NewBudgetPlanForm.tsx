@@ -27,7 +27,7 @@ const NewBudgetPlanForm = ({ onPlanCreated }: NewBudgetPlanFormProps) => {
             return;
         }
 
-        const budget = parseFloat(initialBudget);
+
         const percentage = parseFloat(savingsPercentage);
 
         if (percentage < 0 || percentage > 100) {

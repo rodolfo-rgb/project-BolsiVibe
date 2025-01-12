@@ -1,150 +1,123 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { useAccounts } from "../../hooks/useAccounts";
-import { useTransactions } from "../../hooks/useTransactions";
-import { useCreditCards } from "../../hooks/useCreditCards";
+import { useRef } from "react";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { useToast } from "../ui/use-toast";
+import { useAccounts } from "../../hooks/useAccounts";
+import { useCreditCards } from "../../hooks/useCreditCards";
+import { useTransactions } from "../../hooks/useTransactions";
+import { Button } from "../ui/button";
 import { FileDown } from "lucide-react";
-import { Button } from "../..//components/ui/button";
-import { useToast } from "../../components/ui/use-toast";
+import BalanceSection from "./sections/BalanceSection";
+import AccountsSection from "./sections/AccountsSection";
+import CreditCardsSection from "./sections/CreditCardsSection";
+import TransactionsSection from "./sections/TransactionsSection";
 
 const QuinceReport = () => {
     const { accounts, getTotalBalance } = useAccounts();
-    const { transactions } = useTransactions();
     const { creditCards } = useCreditCards();
+    const { transactions } = useTransactions();
     const { toast } = useToast();
+    const reportRef = useRef<HTMLDivElement>(null);
 
-    const totalBalance = getTotalBalance();
-    const totalDebt = creditCards.reduce((sum, card) => sum + card.debt, 0);
+    const calculateTotalIncome = () => {
+        return transactions
+            .filter((t) => t.type === "income")
+            .reduce((sum, t) => sum + t.amount, 0);
+    };
 
-    // Calcular ingresos y gastos
-    const income = transactions
-        .filter(t => t.type === "income")
-        .reduce((sum, t) => sum + t.amount, 0);
+    const calculateTotalExpenses = () => {
+        return transactions
+            .filter((t) => t.type === "expense")
+            .reduce((sum, t) => sum + t.amount, 0);
+    };
 
-    const expenses = transactions
-        .filter(t => t.type === "expense")
-        .reduce((sum, t) => sum + t.amount, 0);
+    const handleExportPDF = async () => {
+        if (!reportRef.current) return;
 
-    // Datos para la gráfica
-    const chartData = [
-        { name: "Ingresos", amount: income },
-        { name: "Gastos", amount: expenses },
-        { name: "Deuda", amount: totalDebt },
-    ];
+        try {
+            toast({
+                title: "Generando PDF",
+                description: "Por favor espere mientras se genera el reporte...",
+            });
 
-    const handleExport = () => {
-        toast({
-            title: "Reporte exportado",
-            description: "El reporte ha sido exportado exitosamente.",
-        });
+            const sections = reportRef.current.children;
+            const pdf = new jsPDF({
+                orientation: "portrait",
+                unit: "mm",
+                format: "a4",
+            });
+
+            let currentPage = 0;
+            const margin = 15;
+            const pageHeight = pdf.internal.pageSize.height;
+            let yPosition = margin;
+
+            pdf.setFontSize(16);
+            pdf.text("Reporte Quincenal", margin, yPosition);
+            yPosition += 10;
+
+            for (let i = 0; i < sections.length; i++) {
+                const section = sections[i] as HTMLElement;
+
+                const canvas = await html2canvas(section, {
+                    logging: false,
+                    useCORS: true,
+                    background: "#ffffff",
+                    width: section.scrollWidth,
+                    height: section.scrollHeight,
+                });
+
+                const imgWidth = pdf.internal.pageSize.width - 2 * margin;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                if (yPosition + imgHeight > pageHeight - margin) {
+                    pdf.addPage();
+                    currentPage++;
+                    yPosition = margin;
+                }
+
+                const imgData = canvas.toDataURL("image/png", 1.0);
+                pdf.addImage(imgData, "PNG", margin, yPosition, imgWidth, imgHeight);
+                yPosition += imgHeight + margin;
+            }
+
+            pdf.save(`reporte-quincenal-${format(new Date(), "dd-MM-yyyy")}.pdf`);
+
+            toast({
+                title: "PDF Generado",
+                description: "El reporte ha sido exportado exitosamente.",
+            });
+        } catch (error) {
+            console.error("Error al generar PDF:", error);
+            toast({
+                title: "Error",
+                description: "Hubo un error al generar el PDF. Por favor intente nuevamente.",
+                variant: "destructive",
+            });
+        }
     };
 
     return (
-        <div className="container mx-auto p-6 space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold">Reporte Quincenal</h1>
-                    <p className="text-muted-foreground">
-                        {format(new Date(), "PPP", { locale: es })}
-                    </p>
-                </div>
-                <Button onClick={handleExport} variant="outline" className="flex items-center gap-2">
+        <div className="container mx-auto p-6">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold">Reporte Quincenal</h1>
+                <Button onClick={handleExportPDF} className="gap-2">
                     <FileDown className="h-4 w-4" />
-                    Exportar Reporte
+                    Exportar PDF
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg">Balance Total</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-2xl font-bold text-green-600">
-                            ${totalBalance.toLocaleString("es-ES")}
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg">Ingresos Quincenales</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-2xl font-bold text-blue-600">
-                            ${income.toLocaleString("es-ES")}
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg">Gastos Quincenales</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-2xl font-bold text-red-600">
-                            ${expenses.toLocaleString("es-ES")}
-                        </p>
-                    </CardContent>
-                </Card>
+            <div ref={reportRef} className="space-y-6">
+                <BalanceSection
+                    totalBalance={getTotalBalance()}
+                    totalIncome={calculateTotalIncome()}
+                    totalExpenses={calculateTotalExpenses()}
+                />
+                <AccountsSection accounts={accounts} />
+                <CreditCardsSection creditCards={creditCards} />
+                <TransactionsSection transactions={transactions} />
             </div>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Resumen de Cuentas</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        {accounts.map((account) => (
-                            <div key={account.id} className="flex justify-between items-center">
-                                <span>{account.name}</span>
-                                <span className="font-medium">
-                                    ${account.balance.toLocaleString("es-ES")}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Tarjetas de Crédito</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        {creditCards.map((card) => (
-                            <div key={card.id} className="flex justify-between items-center">
-                                <span>{card.name}</span>
-                                <span className="font-medium text-red-600">
-                                    ${card.debt.toLocaleString("es-ES")}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Gráfica de Movimientos</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="h-[300px] mt-4">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
-                                <Bar dataKey="amount" fill="#0284c7" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     );
 };
