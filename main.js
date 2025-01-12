@@ -18,7 +18,7 @@ function createWindow() {
         },
         // Mantener el marco para conservar los botones de cerrar, minimizar y maximizar
         frame: true,
-        icon: path.join(__dirname, 'public/BolsiVibe.png'),
+        icon: path.join(__dirname, 'public/Bolsi.png'),
     });
 
     win.loadURL('http://localhost:5173'); // Cambia esto si tu puerto es diferente
